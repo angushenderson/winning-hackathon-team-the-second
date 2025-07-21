@@ -50,6 +50,13 @@
       transition: color 0.3s ease;
       cursor: pointer;
     }
+    .fav-btn.favorited {
+      
+      border-color: #ff4081;
+      color: #ff4081;
+    }
+
+
     .fav-btn:hover {
       color: #ff79a8;
       transform: scale(1.2);
@@ -90,6 +97,11 @@
       color: #ddd;
       margin-top: 10px;
       font-size: 0.9rem;
+    }
+
+    #favlyrc {
+      display: flex;
+      align-items: center;
     }
   </style>
 </head>
@@ -170,10 +182,18 @@
               Your browser does not support the audio tag.
             </audio>
             <div class="visualizer" id="viz-${i}"></div>
-            <button class="fav-btn" onclick="addToFavorites('${song.title.replace(/'/g, "\\'")}', '${song.artist.name.replace(/'/g, "\\'")}', '${song.preview}', '${song.album.cover_medium}')">
-              <i class="fas fa-heart"></i>
-            </button>
-            <button class="btn btn-outline-info btn-sm mt-2 toggle-lyrics-btn">Show Lyrics</button>
+            <div id="favlyrc">
+            <button 
+  class="fav-btn" 
+  data-title="${song.title}" 
+  data-artist="${song.artist.name}" 
+  data-preview="${song.preview}" 
+  data-cover="${song.album.cover_medium}"
+  onclick="toggleFavorite(this)">
+  <i class="far fa-heart"></i>
+</button>
+
+            <button class="btn btn-outline-info btn-sm mt-2 toggle-lyrics-btn">Show Lyrics</button></div>
             <div class="lyrics-container"></div>
           </div>
         `;
@@ -195,10 +215,10 @@
 
   cards.forEach(card => observer.observe(card));
 }
+    setupAudioVisualizer();
+    fadeInOnScroll();
+    updateFavoriteButtons();
 
-      setupAudioVisualizer();
-
-      fadeInOnScroll(); // This triggers fade-in once cards are added
 
     } catch (error) {
       resultsContainer.innerHTML = `<p class="text-danger">Failed to load songs. Please try again later.</p>`;
@@ -240,12 +260,65 @@
     });
   }
 
-  function addToFavorites(title, artist, preview, cover) {
-    const favs = JSON.parse(localStorage.getItem("favorites") || "[]");
+function toggleFavorite(btnElement) {
+  const title = btnElement.dataset.title;
+  const artist = btnElement.dataset.artist;
+  const preview = btnElement.dataset.preview;
+  const cover = btnElement.dataset.cover;
+
+  let favs = JSON.parse(localStorage.getItem("favorites") || "[]");
+
+  const index = favs.findIndex(song =>
+    song.title === title &&
+    song.artist === artist &&
+    song.preview === preview
+  );
+
+  if (index !== -1) {
+    favs.splice(index, 1);
+    
+  } else {
     favs.push({ title, artist, preview, cover });
-    localStorage.setItem("favorites", JSON.stringify(favs));
-    alert(`${title} added to favorites!`);
+    
   }
+
+  localStorage.setItem("favorites", JSON.stringify(favs));
+  updateFavoriteButtons(); // this will update all icons
+}
+
+
+
+
+
+function updateFavoriteButtons() {
+  const favs = JSON.parse(localStorage.getItem("favorites") || "[]");
+  const buttons = document.querySelectorAll('.fav-btn');
+
+  buttons.forEach(btn => {
+    const title = btn.dataset.title;
+    const artist = btn.dataset.artist;
+    const preview = btn.dataset.preview;
+    const icon = btn.querySelector("i");
+
+    const isFavorited = favs.some(song =>
+      song.title === title &&
+      song.artist === artist &&
+      song.preview === preview
+    );
+
+    if (isFavorited) {
+      icon.classList.remove("far"); // outline
+      icon.classList.add("fas");    // solid
+      btn.classList.add("favorited");
+    } else {
+      icon.classList.remove("fas");
+      icon.classList.add("far");
+      btn.classList.remove("favorited");
+    }
+  });
+}
+
+
 
   // Lyrics fetching function
   async function fetchLyrics(artist, title, lyricsContainer) {
