@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Moodify - Favorites</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    body {
+      background: linear-gradient(to right, #0f0c29, #302b63, #24243e);
+      color: white;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .navbar {
+      background-color: #1c1c2b;
+    }
+    .logo {
+      font-weight: bold;
+    }
+    .fav-song-card {
+      background-color: #2d2d44;
+      border-radius: 15px;
+      padding: 15px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      transition: transform 0.3s;
+    }
+    .fav-song-card:hover {
+      transform: scale(1.02);
+    }
+    .fav-cover {
+      width: 100px;
+      height: 100px;
+      border-radius: 10px;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+    .fav-details {
+      flex-grow: 1;
+    }
+    .fav-title {
+      font-size: 1.2rem;
+      margin: 0;
+    }
+    .fav-artist {
+      color: #a0a0a0;
+      margin: 4px 0 8px 0;
+    }
+    .fav-mood {
+      font-style: italic;
+      color: #66c0f4;
+      margin-bottom: 8px;
+    }
+    .fav-audio {
+      width: 100%;
+      margin-bottom: 10px;
+    }
+    .remove-btn {
+      background: none;
+      border: none;
+      color: #ff4081;
+      font-size: 1.4rem;
+      cursor: pointer;
+      transition: color 0.3s ease;
+      flex-shrink: 0;
+    }
+    .remove-btn:hover {
+      color: #ff79a8;
+      transform: scale(1.2);
+    }
+    .empty-msg {
+      text-align: center;
+      margin-top: 50px;
+      font-size: 1.4rem;
+      color: #bbb;
+    }
+  </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand logo" href="index.html"><i class="fas fa-music"></i> Moodify</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+        <li class="nav-item"><a class="nav-link active" href="favorites.html">Favorites</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="container py-4">
+  <h2 class="mb-4 text-center">Your Favorite Songs</h2>
+  <div id="favorites-list"></div>
+</div>
+
+<script>
+  const favoritesList = document.getElementById('favorites-list');
+
+  function loadFavorites() {
+    const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+
+    if (favorites.length === 0) {
+      favoritesList.innerHTML = '<p class="empty-msg">You have no favorite songs yet.</p>';
+      return;
+    }
+
+    favoritesList.innerHTML = '';
+
+    favorites.forEach((song, index) => {
+      // For mood display: since no mood stored, we try to guess or display 'Unknown Mood'
+      // Here, just display a placeholder mood 'Mood: Unknown'
+      // Alternatively, you can parse song.title or artist for mood keywords if you want.
+
+      const moodText = 'Mood: Unknown';
+
+      const card = document.createElement('div');
+      card.className = 'fav-song-card';
+
+      card.innerHTML = `
+        <img src="${song.cover}" alt="Album cover" class="fav-cover" />
+        <div class="fav-details">
+          <p class="fav-title">${song.title}</p>
+          <p class="fav-artist">${song.artist}</p>
+          <p class="fav-mood">${moodText}</p>
+          <audio controls class="fav-audio">
+            <source src="${song.preview}" type="audio/mpeg" />
+            Your browser does not support the audio element.
+          </audio>
+        </div>
+        <button class="remove-btn" aria-label="Remove from favorites" title="Remove from favorites" data-index="${index}">
+          <i class="fas fa-trash"></i>
+        </button>
+      `;
+
+      favoritesList.appendChild(card);
+    });
+
+    // Add event listeners for remove buttons
+    document.querySelectorAll('.remove-btn').forEach(button => {
+      button.addEventListener('click', (e) => {
+        const idx = e.currentTarget.dataset.index;
+        removeFavorite(idx);
+      });
+    });
+  }
+
+  function removeFavorite(index) {
+    const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+    favorites.splice(index, 1);
+    localStorage.setItem('favorites', JSON.stringify(favorites));
+    loadFavorites();
+  }
+
+  // Load favorites on page load
+  loadFavorites();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Moodify - Results</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    body {
+      background: linear-gradient(to right, #0f0c29, #302b63, #24243e);
+      color: white;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .navbar {
+      background-color: #1c1c2b;
+    }
+    .logo {
+      font-weight: bold;
+    }
+    .song-card {
+      background-color: #2d2d44;
+      border-radius: 15px;
+      padding: 15px;
+      margin-bottom: 20px;
+      transition: transform 0.3s;
+      height: 100%;
+    }
+    .song-card:hover {
+      transform: scale(1.02);
+    }
+    .song-card img {
+      width: 100%;
+      border-radius: 10px;
+    }
+    .fav-btn {
+      background: none;
+      border: none;
+      color: #ff4081;
+      font-size: 1.5rem;
+      margin-top: 10px;
+      transition: color 0.3s ease;
+      cursor: pointer;
+    }
+    .fav-btn:hover {
+      color: #ff79a8;
+      transform: scale(1.2);
+    }
+    .visualizer {
+      display: flex;
+      gap: 2px;
+      margin-top: 10px;
+      height: 15px;
+      opacity: 0.3;
+      transition: opacity 0.3s ease;
+    }
+    .visualizer.active {
+      opacity: 1;
+    }
+    .bar {
+      width: 4px;
+      height: 100%;
+      background: #00f9ff;
+      animation: bounce 1s infinite ease-in-out paused; /* paused by default */
+    }
+    .visualizer.active .bar {
+      animation-play-state: running; /* only run animation on active */
+    }
+    @keyframes bounce {
+      0%, 100% { transform: scaleY(1); }
+      50% { transform: scaleY(2); }
+    }
+    /* Lyrics container styling */
+    .lyrics-container {
+      display: none;
+      white-space: pre-wrap;
+      max-height: 200px;
+      overflow-y: auto;
+      background: #222244;
+      padding: 10px;
+      border-radius: 8px;
+      color: #ddd;
+      margin-top: 10px;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand logo" href="index.html"><i class="fas fa-music"></i> Moodify</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="favorites.html">Favorites</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="container py-4">
+  <h2 id="results-title" class="mb-4"></h2>
+  <div id="results" class="row"></div>
+</div>
+
+<script>
+  const moodParam = new URLSearchParams(window.location.search).get("mood")?.toLowerCase() || '';
+  const mainMoods = {
+    happy: "happy",
+    sad: "sad",
+    angry: "angry",
+    moody: "moody",
+    energetic: "energy",
+    party: "party",
+    chill: "chill",
+    depressed: "depression",
+    romantic: "romance",
+    lonely: "alone"
+  };
+
+  const matchMood = Object.keys(mainMoods).find(key => moodParam.includes(key)) || 'moody';
+  const query = mainMoods[matchMood];
+
+  const title = document.getElementById("results-title");
+  title.innerText = `🎶 Songs for when you're feeling ${matchMood}`;
+
+  const resultsContainer = document.getElementById("results");
+
+  async function fetchSongs() {
+    try {
+      const response = await fetch(`https://deezerdevs-deezer.p.rapidapi.com/search?q=${query}`, {
+        method: 'GET',
+        headers: {
+          'X-RapidAPI-Key': 'f667d70eefmshadd39b3c6190679p1eb22fjsnc3d2fbcb2ee5',
+          'X-RapidAPI-Host': 'deezerdevs-deezer.p.rapidapi.com'
+        }
+      });
+
+      const data = await response.json();
+      const songs = data.data.slice(0, 10);
+
+      if (songs.length === 0) {
+        resultsContainer.innerHTML = `<p>No songs found. Try a different mood.</p>`;
+        return;
+      }
+
+      songs.forEach((song, i) => {
+        const col = document.createElement("div");
+        col.className = "col-md-6 col-lg-4";
+
+        col.innerHTML = `
+          <div class="song-card">
+            <img src="${song.album.cover_medium}" alt="Album cover">
+            <h5 class="mt-2">${song.title}</h5>
+            <p>${song.artist.name}</p>
+            <audio class="audio-player" controls data-index="${i}">
+              <source src="${song.preview}" type="audio/mpeg" />
+              Your browser does not support the audio tag.
+            </audio>
+            <div class="visualizer" id="viz-${i}"></div>
+            <button class="fav-btn" onclick="addToFavorites('${song.title.replace(/'/g, "\\'")}', '${song.artist.name.replace(/'/g, "\\'")}', '${song.preview}', '${song.album.cover_medium}')">
+              <i class="fas fa-heart"></i>
+            </button>
+            <button class="btn btn-outline-info btn-sm mt-2 toggle-lyrics-btn">Show Lyrics</button>
+            <div class="lyrics-container"></div>
+          </div>
+        `;
+        resultsContainer.appendChild(col);
+      });
+
+      setupAudioVisualizer();
+
+    } catch (error) {
+      resultsContainer.innerHTML = `<p class="text-danger">Failed to load songs. Please try again later.</p>`;
+    }
+  }
+
+  function setupAudioVisualizer() {
+    const players = document.querySelectorAll('.audio-player');
+    players.forEach(player => {
+      const viz = document.getElementById(`viz-${player.dataset.index}`);
+      // Clear previous bars
+      viz.innerHTML = "";
+      for (let i = 0; i < 15; i++) {
+        const bar = document.createElement("div");
+        bar.classList.add("bar");
+        bar.style.animationDelay = `${Math.random() * 1}s`;
+        viz.appendChild(bar);
+      }
+
+      player.addEventListener("play", () => {
+        // Pause other players and reset visualizers
+        players.forEach(p => {
+          if (p !== player) {
+            p.pause();
+            const otherViz = document.getElementById(`viz-${p.dataset.index}`);
+            if (otherViz) otherViz.classList.remove("active");
+          }
+        });
+        viz.classList.add("active");
+      });
+
+      player.addEventListener("pause", () => {
+        viz.classList.remove("active");
+      });
+
+      player.addEventListener("ended", () => {
+        viz.classList.remove("active");
+      });
+    });
+  }
+
+  function addToFavorites(title, artist, preview, cover) {
+    const favs = JSON.parse(localStorage.getItem("favorites") || "[]");
+    favs.push({ title, artist, preview, cover });
+    localStorage.setItem("favorites", JSON.stringify(favs));
+    alert(`${title} added to favorites!`);
+  }
+
+  // Lyrics fetching function
+  async function fetchLyrics(artist, title, lyricsContainer) {
+    lyricsContainer.innerHTML = "<em>Loading lyrics...</em>";
+    try {
+      const response = await fetch(`https://api.lyrics.ovh/v1/${encodeURIComponent(artist)}/${encodeURIComponent(title)}`);
+      if (!response.ok) throw new Error("Lyrics not found");
+      const data = await response.json();
+      if (data.lyrics) {
+        lyricsContainer.textContent = data.lyrics;
+      } else {
+        lyricsContainer.innerHTML = "<em>Lyrics not available.</em>";
+      }
+    } catch (error) {
+      lyricsContainer.innerHTML = "<em>Error loading lyrics.</em>";
+    }
+  }
+
+  // Lyrics toggle and fetch handler
+  resultsContainer.addEventListener("click", (e) => {
+    if (e.target.classList.contains("toggle-lyrics-btn")) {
+      const btn = e.target;
+      const lyricsDiv = btn.nextElementSibling;
+      const songCard = btn.closest(".song-card");
+      const title = songCard.querySelector("h5").textContent;
+      const artist = songCard.querySelector("p").textContent;
+
+      if (lyricsDiv.style.display === "none" || lyricsDiv.style.display === "") {
+        lyricsDiv.style.display = "block";
+        btn.textContent = "Hide Lyrics";
+        if (!lyricsDiv.dataset.loaded) {
+          fetchLyrics(artist, title, lyricsDiv);
+          lyricsDiv.dataset.loaded = "true";
+        }
+      } else {
+        lyricsDiv.style.display = "none";
+        btn.textContent = "Show Lyrics";
+      }
+    }
+  });
+
+  fetchSongs();
+</script>
+
+</body>
+</html>
