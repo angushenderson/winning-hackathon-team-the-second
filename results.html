@@ -203,6 +203,7 @@
   data-artist="${song.artist.name}" 
   data-preview="${song.preview}" 
   data-cover="${song.album.cover_medium}"
+  data-link="${song.link}"
   onclick="toggleFavorite(this)">
   <i class="far fa-heart"></i>
 </button>
@@ -244,6 +245,7 @@ function toggleFavorite(btnElement) {
   const artist = btnElement.dataset.artist;
   const preview = btnElement.dataset.preview;
   const cover = btnElement.dataset.cover;
+  const link = btnElement.dataset.link;
 
   let favs = JSON.parse(localStorage.getItem("favorites") || "[]");
 
@@ -257,7 +259,7 @@ function toggleFavorite(btnElement) {
     favs.splice(index, 1);
     
   } else {
-    favs.push({ title, artist, preview, cover });
+    favs.push({ title, artist, preview, cover, matchMood, link });
     
   }
 
