@@ -131,7 +131,7 @@
       // Here, just display a placeholder mood 'Mood: Unknown'
       // Alternatively, you can parse song.title or artist for mood keywords if you want.
 
-      const moodText = 'Mood: Unknown';
+      const moodText = 'Mood: ' + song.matchMood;
 
       const card = document.createElement('div');
       card.className = 'fav-song-card';
