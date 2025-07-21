@@ -126,7 +126,7 @@
       card.className = 'fav-song-card';
 
       card.innerHTML = `
-        <img src="${song.cover}" alt="Album cover" class="fav-cover" />
+        <a href="${song.link}"><img src="${song.cover}" alt="Album cover" class="fav-cover" /></a>
         <div class="fav-details">
           <p class="fav-title">${song.title}</p>
           <p class="fav-artist">${song.artist}</p>
