@@ -154,7 +154,7 @@
 
         col.innerHTML = `
           <div class="song-card">
-            <img src="${song.album.cover_medium}" alt="Album cover">
+            <a href="${song.link}"><img src="${song.album.cover_medium}" alt="Album cover"></a>
             <h5 class="mt-2">${song.title}</h5>
             <p>${song.artist.name}</p>
             <audio class="audio-player" controls data-index="${i}">
