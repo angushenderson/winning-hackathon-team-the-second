@@ -183,7 +183,7 @@
               <source src="${song.preview}" type="audio/mpeg" />
               Your browser does not support the audio tag.
             </audio>
-            <div class="visualizer" id="viz-${i}"></div>
+           
             <div id="favlyrc">
             <button 
   class="fav-btn" 
@@ -217,7 +217,6 @@
 
   cards.forEach(card => observer.observe(card));
 }
-    setupAudioVisualizer();
     fadeInOnScroll();
     updateFavoriteButtons();
 
@@ -227,41 +226,7 @@
     }
   }
 
-  function setupAudioVisualizer() {
-    const players = document.querySelectorAll('.audio-player');
-    players.forEach(player => {
-      const viz = document.getElementById(`viz-${player.dataset.index}`);
-      // Clear previous bars
-      viz.innerHTML = "";
-      for (let i = 0; i < 15; i++) {
-        const bar = document.createElement("div");
-        bar.classList.add("bar");
-        bar.style.animationDelay = `${Math.random() * 1}s`;
-        viz.appendChild(bar);
-      }
-
-      player.addEventListener("play", () => {
-        // Pause other players and reset visualizers
-        players.forEach(p => {
-          if (p !== player) {
-            p.pause();
-            const otherViz = document.getElementById(`viz-${p.dataset.index}`);
-            if (otherViz) otherViz.classList.remove("active");
-          }
-        });
-        viz.classList.add("active");
-      });
-
-      player.addEventListener("pause", () => {
-        viz.classList.remove("active");
-      });
-
-      player.addEventListener("ended", () => {
-        viz.classList.remove("active");
-      });
-    });
-  }
-
+  
 function toggleFavorite(btnElement) {
   const title = btnElement.dataset.title;
   const artist = btnElement.dataset.artist;
